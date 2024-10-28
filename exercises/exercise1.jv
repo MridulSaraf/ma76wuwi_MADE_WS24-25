@@ -34,7 +34,7 @@ pipeline Airports_Pipeline{
             "ICAO" oftype text,
             "Latitude" oftype decimal,
             "Longitude" oftype decimal,
-            "Altitude" oftype integer
+            "Altitude" oftype integer,
         ];
 
     }
