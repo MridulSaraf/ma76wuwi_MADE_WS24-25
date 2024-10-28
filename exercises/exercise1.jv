@@ -38,7 +38,7 @@ pipeline Airports_Pipeline{
     block Airports_Loader oftype SQLiteLoader{
         
         table: "airports";
-        file: "./airports.sqlite";
+        file: ".exercise/airports.sqlite";
     }
 
 Airports_Extractor
