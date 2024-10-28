@@ -1,10 +1,6 @@
 pipeline Airports_Pipeline{
 
-    Airports_Extractor
-        -> Airports_TextfileInterpreter
-        -> Airports_CVSInterpreter
-        -> Airports_ETL
-        -> Airports_Loader;
+
     
     block Airports_Extractor oftype HttpExtractor{
         
@@ -44,8 +40,11 @@ pipeline Airports_Pipeline{
         table: "airports";
         file: "./airports.sqlite";
     }
-    
-    
-     
+
+Airports_Extractor
+        -> Airports_TextfileInterpreter
+        -> Airports_CVSInterpreter
+        -> Airports_ETL
+        -> Airports_Loader;
 }
-/v1
+
