@@ -14,7 +14,7 @@ pipeline Airports_Pipeline{
 
     block Airports_CVSInterpreter oftype CSVInterpreter{
         
-        delimiter: ";";
+        enclosing: '"';
     }
    
     block Airports_ETL oftype TableInterpreter{
