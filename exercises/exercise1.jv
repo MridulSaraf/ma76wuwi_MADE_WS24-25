@@ -2,14 +2,14 @@ pipeline Airports_Pipeline{
     block Airports_Extractor oftype HttpExtractor{
         url:"https://opendata.rhein-kreis-neuss.de/api/explore/v2.1/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv";
     }
-    block Airports_Data_Transformer oftype TextFileInterpreter{
+    block Airports_Transformer oftype TextFileInterpreter{
         
     }
-    block Airports_Data_Transformer2 oftype CSVInterpreter{
+    block Airports_Transformer2 oftype CSVInterpreter{
         delimiter: ";";
     }
-    block Airports_Data_Transformer3 oftype TableInterpreter{
-        header: false;
+    block Airports_Transformer3 oftype TableInterpreter{
+        header: true;
         columns:[
             "Lfd. Nummer" oftype integer,
             "Name des Flughafens" oftype text,
@@ -23,16 +23,16 @@ pipeline Airports_Pipeline{
         ];
 
     }
-    block Airports_Data_Loader oftype SQLiteLoader{
+    block Airports_Loader oftype SQLiteLoader{
         table: "airports";
 
         file: "./airports.sqlite";
     }
-    Airports_Data_Extractor
-        -> Airports_Data_Transformer
-        -> Airports_Data_Transformer2
-        -> Airports_Data_Transformer3
-        -> Airports_Data_Loader;
+    Airports_Extractor
+        -> Airports_Transformer
+        -> Airports_Transformer2
+        -> Airports_Transformer3
+        -> Airports_Loader;
     
      
 }
