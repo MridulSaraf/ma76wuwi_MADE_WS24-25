@@ -1,32 +1,16 @@
-//Data pipeline for Jayvee model
-
-pipeline Airports_Data_Pipeline{
-    //Extractor Block: To retrieve data from the source
-    block Airports_Data_Extractor oftype HttpExtractor{
-        //property string url;
-    
-        //source: "https://opendata.rhein-kreis-neuss.de/api/v2/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv
+pipeline Airports_Pipeline{
+    block Airports_Extractor oftype HttpExtractor{
         url:"https://opendata.rhein-kreis-neuss.de/api/explore/v2.1/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv";
     }
-    //Transformer Block 1: To transform the data into the textfile
     block Airports_Data_Transformer oftype TextFileInterpreter{
-        //Property to store the name of the file
-        //Property to store the data
         
     }
-    //Transformer Block 2: For CVS Interpreter
     block Airports_Data_Transformer2 oftype CSVInterpreter{
-        //Property to store the data
-        //property string data;
         delimiter: ";";
     }
-    //Transformer Block 3: Assign built in data types and convert the data(CSV) to Table
     block Airports_Data_Transformer3 oftype TableInterpreter{
-        //Property to store the data
-        //property string data;
         header: false;
         columns:[
-            //Lfd. Nummer;Name des Flughafens;Ort;Land;IATA;ICAO;Latitude;Longitude;Altitude;Zeitzone;DST;Zeitzonen-Datenbank;geo_punkt
             "Lfd. Nummer" oftype integer,
             "Name des Flughafens" oftype text,
             "Ort" oftype text,
@@ -36,27 +20,14 @@ pipeline Airports_Data_Pipeline{
             "Latitude" oftype decimal,
             "Longitude" oftype decimal,
             "Altitude" oftype integer,
-            "Zeitzone" oftype decimal,
-            "DST" oftype text,
-            "Zeitzonen-Datenbank" oftype text,
-            "geo_punkt" oftype text,
         ];
 
     }
-    //Loader Block: To load the data into the destination(sqlite)
     block Airports_Data_Loader oftype SQLiteLoader{
-        //Property to store the name of the database
-        //property string database;
-
-        //Property to store the name of the table
-        //property string table;
         table: "airports";
 
-        //Property to store the data
-        //property string file;
         file: "./airports.sqlite";
     }
-    //Pipeline to connect the blocks
     Airports_Data_Extractor
         -> Airports_Data_Transformer
         -> Airports_Data_Transformer2
