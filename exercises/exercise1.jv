@@ -24,15 +24,8 @@ pipeline Airports_Pipeline{
 
     }
     block Airports_Loader oftype SQLiteLoader{
-        //Property to store the name of the database
-        //property string database;
-
-        //Property to store the name of the table
-        //property string table;
         table: "airports";
 
-        //Property to store the data
-        //property string file;
         file: "./airports.sqlite";
     }
     Airports_Extractor
