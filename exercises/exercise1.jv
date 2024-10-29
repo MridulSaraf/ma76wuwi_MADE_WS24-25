@@ -23,7 +23,7 @@ pipeline Airports_Pipeline{
         ];
 
     }
-    block Airports_Data_Loader oftype SQLiteLoader{
+    block Airports_Loader oftype SQLiteLoader{
         //Property to store the name of the database
         //property string database;
 
