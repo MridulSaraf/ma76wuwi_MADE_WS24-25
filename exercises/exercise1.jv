@@ -1,25 +1,30 @@
-pipeline Airports_Pipeline{
+//Data pipeline for Jayvee model
 
-
+pipeline Airports_Data_Pipeline{
+    //Extractor Block: To retrieve data from the source
+    block Airports_Data_Extractor oftype HttpExtractor{
+        //property string url;
     
-    block Airports_Extractor oftype HttpExtractor{
-        
-    
-    url:"https://opendata.rhein-kreis-neuss.de/api/explore/v2.1/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv?lang=en&timezone=Europe%2FBerlin&use_labels=true&delimiter=%3B";
+        //source: "https://opendata.rhein-kreis-neuss.de/api/v2/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv
+        url:"https://opendata.rhein-kreis-neuss.de/api/explore/v2.1/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv";
     }
-   
-    block Airports_TextfileInterpreter oftype TextFileInterpreter{
+    //Transformer Block 1: To transform the data into the textfile
+    block Airports_Data_Transformer oftype TextFileInterpreter{
+        //Property to store the name of the file
+        //Property to store the data
         
     }
-
-    block Airports_CVSInterpreter oftype CSVInterpreter{
-        
-        enclosing: '"';
+    //Transformer Block 2: For CVS Interpreter
+    block Airports_Data_Transformer2 oftype CSVInterpreter{
+        //Property to store the data
+        //property string data;
+        delimiter: ";";
     }
-   
-    block Airports_ETL oftype TableInterpreter{
-        
-        header: true;
+    //Transformer Block 3: Assign built in data types and convert the data(CSV) to Table
+    block Airports_Data_Transformer3 oftype TableInterpreter{
+        //Property to store the data
+        //property string data;
+        header: false;
         columns:[
             //Lfd. Nummer;Name des Flughafens;Ort;Land;IATA;ICAO;Latitude;Longitude;Altitude;Zeitzone;DST;Zeitzonen-Datenbank;geo_punkt
             "Lfd. Nummer" oftype integer,
@@ -31,20 +36,32 @@ pipeline Airports_Pipeline{
             "Latitude" oftype decimal,
             "Longitude" oftype decimal,
             "Altitude" oftype integer,
+            "Zeitzone" oftype decimal,
+            "DST" oftype text,
+            "Zeitzonen-Datenbank" oftype text,
+            "geo_punkt" oftype text,
         ];
 
     }
-    
-    block Airports_Loader oftype SQLiteLoader{
-        
+    //Loader Block: To load the data into the destination(sqlite)
+    block Airports_Data_Loader oftype SQLiteLoader{
+        //Property to store the name of the database
+        //property string database;
+
+        //Property to store the name of the table
+        //property string table;
         table: "airports";
-        file: ".exercise/airports.sqlite";
+
+        //Property to store the data
+        //property string file;
+        file: "./airports.sqlite";
     }
-
-Airports_Extractor
-        -> Airports_TextfileInterpreter
-        -> Airports_CVSInterpreter
-        -> Airports_ETL
-        -> Airports_Loader;
+    //Pipeline to connect the blocks
+    Airports_Data_Extractor
+        -> Airports_Data_Transformer
+        -> Airports_Data_Transformer2
+        -> Airports_Data_Transformer3
+        -> Airports_Data_Loader;
+    
+     
 }
-
