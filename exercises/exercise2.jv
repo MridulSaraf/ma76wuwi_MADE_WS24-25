@@ -15,16 +15,21 @@ pipeline BaumPipeline {
         delimiter: ";";
     }
 
+    // Drop "baumart_deutsch" column 
+    block ColumnDeleter oftype ColumnDeleter {
+        delete: [column E];
+    } 
+
    // Transformer Block: Converts trees Sheet to Table (In: Sheet, Out: Table)
     block TableInterpreter oftype TableInterpreter {
-        header: true;
+        header: false;
         columns: [
             "lfd_nr" oftype integer,
             "stadtteil" oftype Vogelsang_defined,
             "standort" oftype text,
             "baumart_botanisch" oftype text,
             "id" oftype geo_defined,
-            "baumfamilie" oftype text,
+            "baumfamilie" oftype text  
         ];
     }
 
@@ -36,7 +41,7 @@ pipeline BaumPipeline {
     }
     // valid stadtteil start with "Vogelsang-"
 constraint Vogelsang_defined_format oftype RegexConstraint {
-        regex: /^Vogelsang-/;
+        regex: /^Vogelsang/;
     }
 
 valuetype Vogelsang_defined oftype text {constraints: [Vogelsang_defined_format,];}
@@ -44,7 +49,6 @@ valuetype Vogelsang_defined oftype text {constraints: [Vogelsang_defined_format,
 // valid id 
 constraint geo_defined_format oftype RegexConstraint {
         regex: /^(\d{1,3}\.\d+), (\d{1,3}\.\d+)$/;
-
     }
 
 valuetype geo_defined oftype text {constraints: [geo_defined_format,];}
