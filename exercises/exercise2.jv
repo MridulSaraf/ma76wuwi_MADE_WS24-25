@@ -1,0 +1,63 @@
+pipeline BaumPipeline {
+
+    // Extractor Block: Extracts trees CSV file 
+    block DataExtractor oftype HttpExtractor {
+        url: "https://opendata.rhein-kreis-neuss.de/api/v2/catalog/datasets/stadt-neuss-herbstpflanzung-2023/exports/csv";
+    }
+
+    // Transformer Block: Converts trees File to TextFile (In: File, Out: TextFile)
+    block TreesTextFileInterpreter oftype TextFileInterpreter {
+        encoding: "latin6";
+    }
+
+    // Transformer Block: Converts trees TextFile to Sheet (In: TextFile, Out: Sheet)
+    block CSVInterpreter oftype CSVInterpreter {
+        delimiter: ";";
+    }
+
+    // Drop "baumart_deutsch" column 
+    block ColumnDeleter oftype ColumnDeleter {
+        delete: [column E];
+    } 
+
+   // Transformer Block: Converts trees Sheet to Table (In: Sheet, Out: Table)
+    block TableInterpreter oftype TableInterpreter {
+        header: false;
+        columns: [
+            "lfd_nr" oftype integer,
+            "stadtteil" oftype Furth_defined,
+            "standort" oftype text,
+            "baumart_botanisch" oftype text,
+            "id" oftype geo_defined,
+            "baumfamilie" oftype text  
+        ];
+    }
+
+    block  DataLoader oftype SQLiteLoader {
+        table: "trees";
+        file: "./trees.sqlite";
+        dropTable: false;
+
+    }
+    // valid stadtteil start with "Furth-"
+constraint Furth_defined_format oftype RegexConstraint {
+        regex: /^Furth-/;
+    }
+
+valuetype Furth_defined oftype text {constraints: [Furth_defined_format,];}
+
+// valid id 
+constraint geo_defined_format oftype RegexConstraint {
+        regex: /^(\d{1,3}\.\d+), (\d{1,3}\.\d+)$/;
+    }
+
+valuetype geo_defined oftype text {constraints: [geo_defined_format,];}
+    
+    // Pipe: Build a chain of all the TreesPipeline's blocks
+    DataExtractor
+    -> TreesTextFileInterpreter
+    -> CSVInterpreter
+    -> ColumnDeleter
+    -> TableInterpreter
+    -> DataLoader;
+}
