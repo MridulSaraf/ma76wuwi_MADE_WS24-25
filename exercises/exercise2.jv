@@ -28,9 +28,9 @@ pipeline BaumPipeline {
             "stadtteil" oftype Vogelsang_defined,
             "standort" oftype text,
             "baumart_botanisch" oftype text,
-            "baumart_deutsch" oftype text,
+            "baumart_deutsch" geo_defined,
             "id" oftype geo_defined,
-            "baumfamilie" oftype text  
+            "baumfamilie" oftype text,
         ];
     }
 
