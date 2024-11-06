@@ -25,7 +25,7 @@ pipeline BaumPipeline {
         header: false;
         columns: [
             "lfd_nr" oftype integer,
-            "stadtteil" oftype Furth_defined,
+            "stadtteil" oftype Vogelsang_defined,
             "standort" oftype text,
             "baumart_botanisch" oftype text,
             "id" oftype geo_defined,
