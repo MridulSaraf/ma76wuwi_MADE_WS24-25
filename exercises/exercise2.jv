@@ -22,12 +22,13 @@ pipeline BaumPipeline {
 
    // Transformer Block: Converts trees Sheet to Table (In: Sheet, Out: Table)
     block TableInterpreter oftype TableInterpreter {
-        header: false;
+        header: true;
         columns: [
             "lfd_nr" oftype integer,
             "stadtteil" oftype Vogelsang_defined,
             "standort" oftype text,
             "baumart_botanisch" oftype text,
+            "baumart_deutsch" oftype text,
             "id" oftype geo_defined,
             "baumfamilie" oftype text  
         ];
