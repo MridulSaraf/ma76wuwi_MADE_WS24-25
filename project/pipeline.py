@@ -15,8 +15,12 @@ os.makedirs(DATA_DIR, exist_ok=True)
 
 def load_data(file_path):
     """Loads data from the provided file path."""
-    df = pd.read_csv(file_path)
-    return df
+    try:
+        df = pd.read_csv(file_path, delimiter=',', error_bad_lines=False, warn_bad_lines=True)
+        return df
+    except pd.errors.ParserError as e:
+        print(f"Error parsing {file_path}: {e}")
+        return None
 
 def clean_transform_ev_data(df):
     """Cleans and transforms EV data."""
