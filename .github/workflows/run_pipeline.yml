@@ -3,8 +3,8 @@ name: Run Data Pipeline
 on:
   push:
     branches:
-      - main  
-  workflow_dispatch:  
+      - main  # Trigger the pipeline when changes are pushed to the main branch
+  workflow_dispatch:  # Allows manual triggering of the workflow
 
 jobs:
   run-pipeline:
@@ -22,9 +22,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pandas sqlite3  
+        pip install pandas  # sqlite3 is part of the Python standard library and doesn’t need installation
 
     - name: Run Pipeline Script
       run: |
-        chmod +x project/pipeline.sh  
+        chmod +x project/pipeline.sh  # Make the pipeline.sh executable
         ./project/pipeline.sh
