@@ -16,7 +16,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 def load_data(file_path):
     """Loads data from the provided file path."""
     try:
-        df = pd.read_csv(file_path, delimiter=',', error_bad_lines=False, warn_bad_lines=True)
+        df = pd.read_csv(file_path, delimiter=',', on_bad_lines='skip', engine='python')
         return df
     except pd.errors.ParserError as e:
         print(f"Error parsing {file_path}: {e}")
