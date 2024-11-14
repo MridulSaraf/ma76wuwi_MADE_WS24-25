@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import sqlite3
 
-# Set paths
+
 DATA_DIR = "/data"
 DB_PATH = os.path.join(DATA_DIR, "project_data.db")
 
@@ -10,7 +10,6 @@ DB_PATH = os.path.join(DATA_DIR, "project_data.db")
 ev_data_url = "https://github.com/MridulSaraf/Data4MADE/blob/main/IEA-EV-dataEV%20salesHistoricalCars.csv" 
 emissions_data_url = "https://github.com/MridulSaraf/Data4MADE/blob/main/b61929c4-3c0f-4ab6-ae58-6ab62624d304_Data.csv" 
 
-# Create /data directory if it doesn’t exist
 os.makedirs(DATA_DIR, exist_ok=True)
 
 def load_data(file_path):
@@ -24,9 +23,7 @@ def load_data(file_path):
 
 def clean_transform_ev_data(df):
     """Cleans and transforms EV data."""
-    # Example transformations: rename columns, handle missing values
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
-    # Filter relevant columns if necessary, e.g., country, year, EV_sales
     df.fillna(method='ffill', inplace=True)
     return df
 
