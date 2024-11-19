@@ -1,60 +1,74 @@
 pipeline WorldBankDataPipeline {
-    
-    // Fetching the Excel file from the URL
-    block FetchData oftype HttpExtractor {
+
+    // Extractor Block: Fetching the Excel file from the URL
+    block DataExtractor oftype HttpExtractor {
         url: "https://thedocs.worldbank.org/en/doc/7d852628d96b9411d43e5d36d5dff941-0050062022/original/Graphs-Chapter-5-02082022.xlsx";
     }
 
-    // Selecting the sheet "Figure S5.1.2" and specific data range
-    block SelectSheetAndRange oftype ExcelSheetSelector {
+    // Selector Block: Selecting the sheet "Figure S5.1.2" and specific range
+    block SheetAndRangeSelector oftype ExcelSheetSelector {
         sheetName: "Figure S5.1.2";
         range: "P2:S45";
     }
 
-    // Interpreting the selected data as a table
-    block InterpretAsTable oftype TableInterpreter {
+    // Interpreter Block: Transforming data into a table
+    block TableInterpreter oftype TableInterpreter {
         header: true;
         columns: [
             "Country Code" oftype CountryCodeAlpha3,
-            "GDP per Capita" oftype float,
-            "Bond Issuance Share" oftype float,
+            "GDP per Capita" oftype GDPValue,
+            "Bond Issuance Share" oftype BondValue,
             "Economy" oftype text
         ];
     }
 
-    // Validating data to ensure only valid rows remain
-    constraint ValidGDP oftype RangeConstraint { lowerBound: 0.0; lowerBoundInclusive: false; }
-    constraint ValidBondShare oftype RangeConstraint { lowerBound: 0.0; lowerBoundInclusive: true; upperBound: 1.0; upperBoundInclusive: true; }
-    
-    valuetype float oftype decimal {
-        constraints: [ValidGDP, ValidBondShare];
+    // Validation for GDP per Capita (must be positive)
+    constraint GDPPositive oftype RangeConstraint {
+        lowerBound: 0.0;
+        lowerBoundInclusive: false;
     }
 
-    // Splitting data into separate tables
-    block BondIssuanceTable oftype ColumnSelector {
+    valuetype GDPValue oftype decimal {
+        constraints: [GDPPositive];
+    }
+
+    // Validation for Bond Issuance Share (must be between 0 and 1)
+    constraint BondRange oftype RangeConstraint {
+        lowerBound: 0.0;
+        upperBound: 1.0;
+        lowerBoundInclusive: true;
+        upperBoundInclusive: true;
+    }
+
+    valuetype BondValue oftype decimal {
+        constraints: [BondRange];
+    }
+
+    // Column Splitter: Splitting data into Bond Issuance and GDP tables
+    block BondIssuanceTableSelector oftype ColumnSelector {
         select: ["Country Code", "Bond Issuance Share"];
     }
-    block GDPTable oftype ColumnSelector {
+
+    block GDPTableSelector oftype ColumnSelector {
         select: ["Country Code", "GDP per Capita"];
     }
 
-    // Writing Bond Issuance Data to SQLite
+    // SQLite Loader: Writing Bond Issuance data to SQLite
     block WriteBondIssuanceData oftype SQLiteLoader {
         table: "bondIssuance";
         file: "./country-stats.sqlite";
     }
 
-    // Writing GDP Data to SQLite
+    // SQLite Loader: Writing GDP data to SQLite
     block WriteGDPData oftype SQLiteLoader {
         table: "gdpPerCapita";
         file: "./country-stats.sqlite";
     }
 
-    // Pipeline flow
-    FetchData
-    -> SelectSheetAndRange
-    -> InterpretAsTable
-    -> BondIssuanceTable -> WriteBondIssuanceData
-    InterpretAsTable -> GDPTable -> WriteGDPData;
-
+    // Pipeline Execution Flow
+    DataExtractor
+    -> SheetAndRangeSelector
+    -> TableInterpreter
+    -> BondIssuanceTableSelector -> WriteBondIssuanceData
+    TableInterpreter -> GDPTableSelector -> WriteGDPData;
 }
