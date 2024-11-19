@@ -1,17 +1,21 @@
 pipeline WorldBankDataPipeline {
 
-    // Extractor Block: Fetching the Excel file from the URL
+    // Fetching the Excel file from the URL
     block DataExtractor oftype HttpExtractor {
         url: "https://thedocs.worldbank.org/en/doc/7d852628d96b9411d43e5d36d5dff941-0050062022/original/Graphs-Chapter-5-02082022.xlsx";
     }
 
-    // Selector Block: Selecting the sheet "Figure S5.1.2" and specific range
-    block SheetAndRangeSelector oftype ExcelSheetSelector {
+    // Selecting the sheet "Figure S5.1.2"
+    block SheetSelector oftype ExcelInterpreter {
         sheetName: "Figure S5.1.2";
-        range: "P2:S45";
     }
 
-    // Interpreter Block: Transforming data into a table
+    // Selecting the specific range P2:S45 from the sheet
+    block RangeSelector oftype CellRangeSelector {
+        select: range P2:S45;
+    }
+
+    // Interpreting the data as a table
     block TableInterpreter oftype TableInterpreter {
         header: true;
         columns: [
@@ -44,22 +48,24 @@ pipeline WorldBankDataPipeline {
         constraints: [BondRange];
     }
 
-    // Column Splitter: Splitting data into Bond Issuance and GDP tables
-    block BondIssuanceTableSelector oftype ColumnSelector {
-        select: ["Country Code", "Bond Issuance Share"];
+    // Splitting data into Bond Issuance and GDP tables
+    block BondIssuanceTableSelector oftype TableTransformer {
+        inputColumns: ["Country Code", "Bond Issuance Share"];
+        outputColumns: ["Country Code", "Bond Issuance Share"];
     }
 
-    block GDPTableSelector oftype ColumnSelector {
-        select: ["Country Code", "GDP per Capita"];
+    block GDPTableSelector oftype TableTransformer {
+        inputColumns: ["Country Code", "GDP per Capita"];
+        outputColumns: ["Country Code", "GDP per Capita"];
     }
 
-    // SQLite Loader: Writing Bond Issuance data to SQLite
+    // Writing Bond Issuance data to SQLite
     block WriteBondIssuanceData oftype SQLiteLoader {
         table: "bondIssuance";
         file: "./country-stats.sqlite";
     }
 
-    // SQLite Loader: Writing GDP data to SQLite
+    // Writing GDP data to SQLite
     block WriteGDPData oftype SQLiteLoader {
         table: "gdpPerCapita";
         file: "./country-stats.sqlite";
@@ -67,7 +73,8 @@ pipeline WorldBankDataPipeline {
 
     // Pipeline Execution Flow
     DataExtractor
-    -> SheetAndRangeSelector
+    -> SheetSelector
+    -> RangeSelector
     -> TableInterpreter
     -> BondIssuanceTableSelector -> WriteBondIssuanceData
     TableInterpreter -> GDPTableSelector -> WriteGDPData;
