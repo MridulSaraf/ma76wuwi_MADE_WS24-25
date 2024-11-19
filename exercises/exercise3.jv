@@ -69,12 +69,7 @@ block bondIssuanceTableInterpreter oftype TableInterpreter {
     -> WBDPSheetPicker
     -> WBDPDataSelector
     -> bondIssuanceTableInterpreter
-    -> bondIssuanceLoader;
-
-    DataExtractor
-    -> WBDPXLXSInterpreter
-    -> WBDPSheetPicker
-    -> WBDPDataSelector
-    ->gdpPerCapitaTableInterpreter
-   -> gdpPerCapitaLoader;
+    ->gdpPerCapitaTableInterpreter    
+    -> bondIssuanceLoader
+    -> gdpPerCapitaLoader;
 }
