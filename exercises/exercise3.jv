@@ -5,27 +5,30 @@ pipeline WorldBankDataPipeline {
         url: "https://thedocs.worldbank.org/en/doc/7d852628d96b9411d43e5d36d5dff941-0050062022/original/Graphs-Chapter-5-02082022.xlsx";
     }
 
-    // Selecting the sheet "Figure S5.1.2"
-    block SheetSelector oftype ExcelInterpreter {
-        sheetName: "Figure S5.1.2";
-    }
+    block WBDPSheetPicker oftype SheetPicker {
+   sheetName: "Figure S5.1.2";
+ }
 
-    // Selecting the specific range P2:S45 from the sheet
-    block RangeSelector oftype CellRangeSelector {
-        select: range P2:S45;
-    }
-
-    // Interpreting the data as a table
-    block TableInterpreter oftype TableInterpreter {
+ block WBDPDataSelector oftype CellRangeSelector {
+   select: range P2:S45;
+ }
+block bondIssuanceTableInterpreter oftype TableInterpreter {
         header: true;
         columns: [
             "Country Code" oftype CountryCodeAlpha3,
-            "GDP per Capita" oftype GDPValue,
-            "Bond Issuance Share" oftype BondValue,
-            "Economy" oftype text
+            "Bond Issuance Share" oftype BondValue
         ];
     }
 
+    // Interpreting the data as a table
+    block gdpPerCapitaTableInterpreter oftype TableInterpreter {
+        header: true;
+        columns: [
+            "GDP per Capita" oftype GDPValue,
+            "Economy" oftype text
+        ];
+    }
+    
     // Validation for GDP per Capita (must be positive)
     constraint GDPPositive oftype RangeConstraint {
         lowerBound: 0.0;
@@ -48,34 +51,25 @@ pipeline WorldBankDataPipeline {
         constraints: [BondRange];
     }
 
-    // Splitting data into Bond Issuance and GDP tables
-    block BondIssuanceTableSelector oftype TableTransformer {
-        inputColumns: ["Country Code", "Bond Issuance Share"];
-        outputColumns: ["Country Code", "Bond Issuance Share"];
-    }
-
-    block GDPTableSelector oftype TableTransformer {
-        inputColumns: ["Country Code", "GDP per Capita"];
-        outputColumns: ["Country Code", "GDP per Capita"];
-    }
-
     // Writing Bond Issuance data to SQLite
-    block WriteBondIssuanceData oftype SQLiteLoader {
+    block bondIssuanceLoader oftype SQLiteLoader {
         table: "bondIssuance";
         file: "./country-stats.sqlite";
     }
 
     // Writing GDP data to SQLite
-    block WriteGDPData oftype SQLiteLoader {
+    block gdpPerCapitaLoader oftype SQLiteLoader {
         table: "gdpPerCapita";
         file: "./country-stats.sqlite";
     }
 
     // Pipeline Execution Flow
     DataExtractor
-    -> SheetSelector
-    -> RangeSelector
-    -> TableInterpreter
-    -> BondIssuanceTableSelector -> WriteBondIssuanceData
-    TableInterpreter -> GDPTableSelector -> WriteGDPData;
+    -> WBDPSheetPicker
+    -> WBDPDataSelector
+    -> bondIssuanceTableInterpreter
+    -> bondIssuanceLoader;
+
+    gdpPerCapitaTableInterpreter
+   -> gdpPerCapitaLoader;
 }
