@@ -1,0 +1,60 @@
+pipeline WorldBankDataPipeline {
+    
+    // Fetching the Excel file from the URL
+    block FetchData oftype HttpExtractor {
+        url: "https://thedocs.worldbank.org/en/doc/7d852628d96b9411d43e5d36d5dff941-0050062022/original/Graphs-Chapter-5-02082022.xlsx";
+    }
+
+    // Selecting the sheet "Figure S5.1.2" and specific data range
+    block SelectSheetAndRange oftype ExcelSheetSelector {
+        sheetName: "Figure S5.1.2";
+        range: "P2:S45";
+    }
+
+    // Interpreting the selected data as a table
+    block InterpretAsTable oftype TableInterpreter {
+        header: true;
+        columns: [
+            "Country Code" oftype CountryCodeAlpha3,
+            "GDP per Capita" oftype float,
+            "Bond Issuance Share" oftype float,
+            "Economy" oftype text
+        ];
+    }
+
+    // Validating data to ensure only valid rows remain
+    constraint ValidGDP oftype RangeConstraint { lowerBound: 0.0; lowerBoundInclusive: false; }
+    constraint ValidBondShare oftype RangeConstraint { lowerBound: 0.0; lowerBoundInclusive: true; upperBound: 1.0; upperBoundInclusive: true; }
+    
+    valuetype float oftype decimal {
+        constraints: [ValidGDP, ValidBondShare];
+    }
+
+    // Splitting data into separate tables
+    block BondIssuanceTable oftype ColumnSelector {
+        select: ["Country Code", "Bond Issuance Share"];
+    }
+    block GDPTable oftype ColumnSelector {
+        select: ["Country Code", "GDP per Capita"];
+    }
+
+    // Writing Bond Issuance Data to SQLite
+    block WriteBondIssuanceData oftype SQLiteLoader {
+        table: "bondIssuance";
+        file: "./country-stats.sqlite";
+    }
+
+    // Writing GDP Data to SQLite
+    block WriteGDPData oftype SQLiteLoader {
+        table: "gdpPerCapita";
+        file: "./country-stats.sqlite";
+    }
+
+    // Pipeline flow
+    FetchData
+    -> SelectSheetAndRange
+    -> InterpretAsTable
+    -> BondIssuanceTable -> WriteBondIssuanceData
+    InterpretAsTable -> GDPTable -> WriteGDPData;
+
+}
