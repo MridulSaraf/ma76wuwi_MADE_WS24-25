@@ -1,75 +1,87 @@
-pipeline WorldBankDataPipeline {
+pipeline WorldBankEconomyPipeline {
 
-    // Fetching the Excel file from the URL
-    block DataExtractor oftype HttpExtractor {
+    WorldBankEconomyExtractor
+        -> WorldBankEconomyXLSXInterpreter
+        -> WorldBankEconomySheetpicker
+        -> WorldBankRenameCountryCode
+        -> WorldBankRenameGDPAndBond
+        -> WorldBankEconomyDataRange
+        -> WorldBankBondTableInterpreter
+        -> WorldBankBondLoader;
+    WorldBankEconomyDataRange
+        -> WorldBankGDPTableInterpreter
+        -> WorldBankGDPLoader;
+
+
+    block WorldBankEconomyExtractor oftype HttpExtractor {
         url: "https://thedocs.worldbank.org/en/doc/7d852628d96b9411d43e5d36d5dff941-0050062022/original/Graphs-Chapter-5-02082022.xlsx";
     }
-block WBDPXLXSInterpreter oftype XLSXInterpreter { }
-    block WBDPSheetPicker oftype SheetPicker {
-   sheetName: "Figure S5.1.2";
- }
 
- block WBDPDataSelector oftype CellRangeSelector {
-   select: range P2:S45;
- }
-block bondIssuanceTableInterpreter oftype TableInterpreter {
+    block WorldBankEconomyXLSXInterpreter oftype XLSXInterpreter { }
+
+    block WorldBankEconomySheetpicker oftype SheetPicker {
+        sheetName: 'Figure S5.1.2';
+    }
+
+    block WorldBankRenameCountryCode oftype CellWriter {
+        at: range P2:P2;
+        write: [
+            "Country Code",
+        ];
+    }
+
+    block WorldBankRenameGDPAndBond oftype CellWriter {
+        at: range R2:S2;
+        write: [
+            "GDP per Capita",
+            "Bond Issuance Share"
+        ];
+    }
+
+    block WorldBankEconomyDataRange oftype CellRangeSelector {
+        select: range P2:S45;
+    }
+
+
+    block WorldBankBondTableInterpreter oftype TableInterpreter {
         header: true;
         columns: [
             "Country Code" oftype CountryCodeAlpha3,
-            "Bond Issuance Share" oftype BondValue
+            "Bond Issuance Share" oftype valueBetweenZeroAndOne
         ];
     }
 
-    // Interpreting the data as a table
-    block gdpPerCapitaTableInterpreter oftype TableInterpreter {
+    block WorldBankBondLoader oftype SQLiteLoader {
+
+        table: "bondIssuance";
+        file: "country-stats.sqlite";
+    }
+
+    block WorldBankGDPTableInterpreter oftype TableInterpreter {
         header: true;
         columns: [
-            "GDP per Capita" oftype GDPValue,
-            "Economy" oftype text
+            "Country Code" oftype ISO_3166_1,
+            "GDP per Capita" oftype positiveDecimal
         ];
     }
-    
-    // Validation for GDP per Capita (must be positive)
-    constraint GDPPositive oftype RangeConstraint {
-        lowerBound: 0.0;
-        lowerBoundInclusive: false;
-    }
 
-    valuetype GDPValue oftype decimal {
-        constraints: [GDPPositive];
-    }
-
-    // Validation for Bond Issuance Share (must be between 0 and 1)
-    constraint BondRange oftype RangeConstraint {
-        lowerBound: 0.0;
-        upperBound: 1.0;
-        lowerBoundInclusive: true;
-        upperBoundInclusive: true;
-    }
-
-    valuetype BondValue oftype decimal {
-        constraints: [BondRange];
-    }
-
-    // Writing Bond Issuance data to SQLite
-    block bondIssuanceLoader oftype SQLiteLoader {
-        table: "bondIssuance";
-        file: "./country-stats.sqlite";
-    }
-
-    // Writing GDP data to SQLite
-    block gdpPerCapitaLoader oftype SQLiteLoader {
+    block WorldBankGDPLoader oftype SQLiteLoader {
         table: "gdpPerCapita";
-        file: "./country-stats.sqlite";
+        file: "country-stats.sqlite";
     }
-
-    // Pipeline Execution Flow
-    DataExtractor
-    -> WBDPXLXSInterpreter
-    -> WBDPSheetPicker
-    -> WBDPDataSelector
-    -> bondIssuanceTableInterpreter
-    -> bondIssuanceLoader;
-    
-WBDPDataSelector->gdpPerCapitaTableInterpreter-> gdpPerCapitaLoader;
 }
+
+
+valuetype positiveDecimal oftype decimal {
+    constraints: [
+        positiveDecimalValidator
+    ];
+}
+constraint positiveDecimalValidator on decimal: value > 0;
+
+valuetype valueBetweenZeroAndOne oftype decimal {
+    constraints: [
+        valueBetweenZeroAndOneValidator
+    ];
+}
+constraint valueBetweenZeroAndOneValidator on decimal: value >= 0 and value <= 1;
