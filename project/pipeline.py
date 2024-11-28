@@ -41,15 +41,15 @@ def save_to_database(df, table_name):
         df.to_sql(table_name, conn, if_exists="replace", index=False)
 
 def main():
-    # Step 1: Load datasets from local paths
+   
     ev_data = load_data(ev_data_url)
     emissions_data = load_data(emissions_data_url)
     
-    # Step 2: Clean and transform datasets
+    #  Clean and transform datasets
     ev_data = clean_transform_ev_data(ev_data)
     emissions_data = clean_transform_emissions_data(emissions_data)
     
-    # Step 3: Save to SQLite database
+    #Save to SQLite database
     save_to_database(ev_data, "ev_data")
     save_to_database(emissions_data, "emissions_data")
     print("Data pipeline executed successfully. Data saved to:", DB_PATH)
