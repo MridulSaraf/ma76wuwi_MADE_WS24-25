@@ -1,0 +1,93 @@
+pipeline Battery_TempPipeline {
+
+    TempExtractor
+        -> TempArchiveInterpreter
+        -> BatTempFilePicker
+        -> BatTempTextFileInterpreter
+        -> BatTempCSVInterpreter
+        -> BatTempHeaderWriter
+        -> BatTempHeaderWriter2
+        -> BatTempCellRangeSelector
+        -> BatTempTableInterpreter
+        -> CelsiusToFahrenheitTransformerA
+        -> CelsiusToFahrenheitTransformerB
+        -> FinalTempLoader;
+
+
+    block TempExtractor oftype HttpExtractor {
+        url: "https://www.mowesta.com/data/measure/mowesta-dataset-20221107.zip";
+    }
+
+    block TempArchiveInterpreter oftype ArchiveInterpreter {
+        archiveType: "zip";
+    }
+
+    block BatTempFilePicker oftype FilePicker {
+        path: "./data.csv";
+    }
+
+    block BatTempTextFileInterpreter oftype TextFileInterpreter {
+        
+    }
+
+    block BatTempCSVInterpreter oftype CSVInterpreter {
+        delimiter: ";";
+    }
+
+    block BatTempHeaderWriter oftype CellWriter {
+        at: range A1:E1;
+        write: ["id" ,"producer", "model", "month", "temperature"];
+    }
+
+    block BatTempHeaderWriter2 oftype CellWriter {
+        at: cell J1;
+        write: ["battery_temperature"];
+    }
+
+    block BatTempCellRangeSelector oftype CellRangeSelector {
+        select: range A1:K*;
+    }
+
+    block BatTempTableInterpreter oftype TableInterpreter {
+        header: true;
+        columns: [
+            "id" oftype formatConstraint,
+            "producer" oftype text,
+            "model" oftype text,
+            "month" oftype formatConstraint,
+            "temperature" oftype decimal,
+    	    "battery_temperature" oftype decimal
+        ];
+    }
+
+    transform CelsiusToFahrenheit {
+        from Celsius oftype decimal;
+        to Fahrenheit oftype decimal;
+
+        Fahrenheit: (Celsius * 9/5) + 32;
+    }
+
+    block CelsiusToFahrenheitTransformerA oftype TableTransformer {
+        inputColumns: ['temperature'];
+        outputColumn: 'temperature';
+        uses: CelsiusToFahrenheit;
+    }
+
+    block CelsiusToFahrenheitTransformerB oftype TableTransformer {
+        inputColumns: ['battery_temperature'];
+        outputColumn: 'battery_temperature';
+        uses: CelsiusToFahrenheit;
+    }
+
+    block FinalTempLoader oftype SQLiteLoader {
+        table: "temperatures";
+        file: "./temperatures.sqlite";
+    }
+
+    constraint Constraint on integer:
+        value > 0;
+
+    valuetype formatConstraint oftype integer {
+        constraints: [Constraint];
+    }
+}
