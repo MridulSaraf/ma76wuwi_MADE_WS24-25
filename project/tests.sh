@@ -3,9 +3,11 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+cd "$(dirname "$0")"
+
 # Defining paths
-PIPELINE_SCRIPT="./project/pipeline.py"
-DATA_DIR="./data"
+PIPELINE_SCRIPT="./pipeline.py"
+DATA_DIR="../data"
 OUTPUT_DB="$DATA_DIR/project_data.db"
 
 # Step 1: Running the data pipeline
