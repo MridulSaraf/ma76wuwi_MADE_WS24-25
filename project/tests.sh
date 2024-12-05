@@ -12,7 +12,7 @@ OUTPUT_DB="$DATA_DIR/project_data.db"
 
 # Step 1: Running the data pipeline
 echo "Running the data pipeline..."
-python3 $PIPELINE_SCRIPT
+python3 $PIPELINE
 
 # Step 2: Validating the output
 echo "Validating the output..."
