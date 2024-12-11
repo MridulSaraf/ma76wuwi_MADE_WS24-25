@@ -2,8 +2,13 @@ import os
 import pandas as pd
 import sqlite3
 
-DATA_DIR = "./data"  # Ensure relative path for CI compatibility
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
 DB_PATH = os.path.join(DATA_DIR, "project_data.db")
+
+os.makedirs(DATA_DIR, exist_ok=True)
+print(f"Data directory created or already exists at {DATA_DIR}")
 
 # Correcting raw URLs
 ev_data_url = "https://raw.githubusercontent.com/MridulSaraf/Data4MADE/main/IEA-EV-dataEV%20salesHistoricalCars.csv"
