@@ -14,7 +14,7 @@ print(f"Data directory created or already exists at {DATA_DIR}")
 ev_data_url = "https://raw.githubusercontent.com/MridulSaraf/Data4MADE/main/IEA-EV-dataEV%20salesHistoricalCars.csv"
 emissions_data_url = "https://raw.githubusercontent.com/MridulSaraf/Data4MADE/main/b61929c4-3c0f-4ab6-ae58-6ab62624d304_Data.csv"
 
-# Ensure data directory exists
+# Ensuring data directory exists
 os.makedirs(DATA_DIR, exist_ok=True)
 
 def load_data(file_path):
