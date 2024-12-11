@@ -5,14 +5,14 @@ set -e
 
 # Define paths
 PIPELINE_SCRIPT="./project/pipeline.py"
-DATA_DIR="./data"
+DATA_DIR="./project/data"
 OUTPUT_DB="$DATA_DIR/project_data.db"
 
 # Step 1: Run the data pipeline
 echo "Running the data pipeline..."
 python3 $PIPELINE_SCRIPT
 
-# Step 2: Validate the output directory
+# Step 2: Validate the data directory
 echo "Validating the data directory..."
 if [ -d "$DATA_DIR" ]; then
     echo "SUCCESS: Data directory exists at $DATA_DIR"
@@ -27,6 +27,8 @@ if [ -f "$OUTPUT_DB" ]; then
     echo "SUCCESS: Output database file exists at $OUTPUT_DB"
 else
     echo "ERROR: Output database file does not exist."
+    echo "Attempted path: $OUTPUT_DB"
+    ls -R "$DATA_DIR"  # List contents of the data directory for debugging
     exit 1
 fi
 
