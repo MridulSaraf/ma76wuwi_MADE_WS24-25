@@ -40,8 +40,14 @@ def clean_transform_emissions_data(df):
 
 def save_to_database(df, table_name):
     """Saves DataFrame to SQLite database."""
-    with sqlite3.connect(DB_PATH) as conn:
-        df.to_sql(table_name, conn, if_exists="replace", index=False)
+    try:
+        print(f"Attempting to write table '{table_name}' to database at {DB_PATH}")
+        with sqlite3.connect(DB_PATH) as conn:
+            df.to_sql(table_name, conn, if_exists="replace", index=False)
+        print(f"Successfully wrote table '{table_name}' to database.")
+    except Exception as e:
+        print(f"Error writing to database: {e}")
+        raise
 
 def main():
     # Load datasets
