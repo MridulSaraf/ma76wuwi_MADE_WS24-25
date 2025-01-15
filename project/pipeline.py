@@ -14,7 +14,7 @@ print(f"Data directory created or already exists at {DATA_DIR}")
 ev_data_url = "https://raw.githubusercontent.com/MridulSaraf/Data4MADE/main/IEA-EV-dataEV%20salesHistoricalCars.csv"
 emissions_data_url = "https://raw.githubusercontent.com/MridulSaraf/Data4MADE/main/b61929c4-3c0f-4ab6-ae58-6ab62624d304_Data.csv"
 
-# Ensuring data directory exists
+
 os.makedirs(DATA_DIR, exist_ok=True)
 
 def load_data(file_path):
@@ -29,13 +29,50 @@ def load_data(file_path):
 def clean_transform_ev_data(df):
     """Cleans and transforms EV data."""
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
-    df.ffill(inplace=True)  # Use ffill() instead of fillna with 'method'
+    df.ffill(inplace=True)  
     return df
 
 def clean_transform_emissions_data(df):
     """Cleans and transforms emissions data."""
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
-    df.ffill(inplace=True)  # Use ffill() instead of fillna with 'method'
+    df.ffill(inplace=True)
+    region_mapping = {
+        "usa": "united states"
+    }
+    df['region'] = df['region'].replace(region_mapping)
+    if 'year' not in df.columns:
+        raise KeyError("'year' column missing in EV data")
+    return df
+def clean_transform_emissions_data(df):
+    """Cleans and transforms emissions data."""
+    df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
+    df.ffill(inplace=True)
+
+    # Rename 'country_name' to 'region' 
+    if 'country_name' in df.columns:
+        df.rename(columns={'country_name': 'region'}, inplace=True)
+
+    # Filter out irrelevant rows based on region
+    if 'region' in df.columns:
+        valid_regions = df['region'].dropna().unique().tolist()
+        valid_regions = [region.lower() for region in valid_regions if "world" not in region and "updated" not in region]
+        df = df[df['region'].str.lower().isin(valid_regions)]
+
+    # Identify year columns
+    year_columns = [col for col in df.columns if col.startswith('20')]
+    if year_columns:
+        df = df.melt(id_vars=['region'], 
+                     value_vars=year_columns, 
+                     var_name='year', 
+                     value_name='emission_value')
+        df['year'] = df['year'].str.extract('(\\d{4})').astype(int)
+        # Filter rows with valid numeric emission values
+        df = df[pd.to_numeric(df['emission_value'], errors='coerce').notnull()]
+        df['emission_value'] = df['emission_value'].astype(float)
+    else:
+        print("Warning: Year columns are missing or incorrectly named in the emissions data.")
+        df = pd.DataFrame(columns=['region', 'year', 'emission_value'])
+
     return df
 
 def save_to_database(df, table_name):
