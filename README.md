@@ -24,4 +24,3 @@ This project explores the relationship between electric vehicle (EV) adoption an
 - Significant emissions reductions in regions with robust EV policies.
 - Year-over-year analysis shows variability in EV sales growth aligning with gradual emissions reductions.
 
-## Repository Structure
